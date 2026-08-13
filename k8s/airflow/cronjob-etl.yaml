@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: airflow-etl-trigger
+  namespace: ecommerce
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: etl-runner
+              image: ghcr.io/YOUR_GITHUB_USER/ecommerce-etl:latest
+              env:
+                - name: DATABASE_URL
+                  value: "postgresql://library:library@postgres-service:5432/library"
+              command:
+                - python
+                - -c
+                - |
+                  import os, psycopg2
+                  conn = psycopg2.connect(os.environ["DATABASE_URL"])
+                  cur = conn.cursor()
+                  cur.execute("""
+                    CREATE TABLE IF NOT EXISTS books_report (
+                      id INTEGER PRIMARY KEY, title VARCHAR(255),
+                      author VARCHAR(255), isbn VARCHAR(20),
+                      genre VARCHAR(100), price FLOAT,
+                      available BOOLEAN,
+                      processed_at TIMESTAMP DEFAULT NOW()
+                    )
+                  """)
+                  cur.execute("""
+                    INSERT INTO books_report (id, title, author, isbn, genre, price, available)
+                    SELECT id, title, author, isbn, genre, price, available
+                    FROM books WHERE available = true AND price > 0
+                    ON CONFLICT (id) DO UPDATE SET
+                      price = EXCLUDED.price, processed_at = NOW()
+                  """)
+                  conn.commit()
+                  print(f"ETL filter completed: {cur.rowcount} rows")
+                  conn.close()
+          restartPolicy: OnFailure
