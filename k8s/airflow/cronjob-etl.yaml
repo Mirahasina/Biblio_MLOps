@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: airflow-etl-trigger
+  name: etl-filter-books
   namespace: librairy
 spec:
   schedule: "0 2 * * *"
@@ -11,34 +11,32 @@ spec:
         spec:
           containers:
             - name: etl-runner
-              image: ghcr.io/YOUR_GITHUB_USER/librairy-etl:latest
+              image: postgres:16-alpine
+              imagePullPolicy: IfNotPresent
               env:
-                - name: DATABASE_URL
-                  value: "postgresql://library:library@postgres-service:5432/library"
+                - name: PGPASSWORD
+                  value: library
               command:
-                - python
+                - /bin/sh
                 - -c
                 - |
-                  import os, psycopg2
-                  conn = psycopg2.connect(os.environ["DATABASE_URL"])
-                  cur = conn.cursor()
-                  cur.execute("""
+                  psql -h postgres-service -U library -d library -c "
                     CREATE TABLE IF NOT EXISTS books_report (
-                      id INTEGER PRIMARY KEY, title VARCHAR(255),
-                      author VARCHAR(255), isbn VARCHAR(20),
-                      genre VARCHAR(100), price FLOAT,
+                      id INTEGER PRIMARY KEY,
+                      title VARCHAR(255),
+                      author VARCHAR(255),
+                      isbn VARCHAR(20),
+                      genre VARCHAR(100),
+                      price FLOAT,
                       available BOOLEAN,
                       processed_at TIMESTAMP DEFAULT NOW()
-                    )
-                  """)
-                  cur.execute("""
+                    );
                     INSERT INTO books_report (id, title, author, isbn, genre, price, available)
                     SELECT id, title, author, isbn, genre, price, available
                     FROM books WHERE available = true AND price > 0
                     ON CONFLICT (id) DO UPDATE SET
-                      price = EXCLUDED.price, processed_at = NOW()
-                  """)
-                  conn.commit()
-                  print(f"ETL filter completed: {cur.rowcount} rows")
-                  conn.close()
+                      price = EXCLUDED.price,
+                      available = EXCLUDED.available,
+                      processed_at = NOW();
+                  "
           restartPolicy: OnFailure
