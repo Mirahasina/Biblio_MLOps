@@ -1,0 +1,161 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --red: #e53935;
+  --red-dark: #c62828;
+  --green: #43a047;
+  --green-dark: #2e7d32;
+  --sky: #87ceeb;
+  --sky-dark: #4fc3f7;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--sky);
+  color: #1a1a1a;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--red);
+  color: white;
+  border-radius: 12px;
+}
+
+header h1 {
+  font-size: 2rem;
+}
+
+.crud-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 3px solid var(--sky-dark);
+}
+
+.book-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--sky);
+}
+
+.book-form input[type="text"],
+.book-form input[type="number"] {
+  padding: 0.6rem;
+  border: 2px solid var(--sky-dark);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.book-form input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.book-form label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: var(--green);
+  color: white;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: var(--green-dark);
+}
+
+.btn-edit {
+  background: var(--sky-dark);
+  color: #0d47a1;
+}
+
+.btn-edit:hover {
+  background: var(--sky);
+}
+
+.btn-delete {
+  background: var(--red);
+}
+
+.btn-delete:hover {
+  background: var(--red-dark);
+}
+
+.book-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.book-table th,
+.book-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--sky);
+}
+
+.book-table th {
+  background: var(--sky);
+  font-weight: 600;
+}
+
+.book-table td button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  margin-right: 0.3rem;
+}
+
+.status-yes {
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+.status-no {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.error {
+  background: #ffcdd2;
+  color: var(--red-dark);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--red);
+}
+
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--green-dark);
+  font-size: 0.85rem;
+}

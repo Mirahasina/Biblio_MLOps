@@ -1,10 +1,15 @@
-backend/
-frontend/
-certs/*.key
-__pycache__/
+# Python
+**/__pycache__/
 *.pyc
-node_modules/
-dist/
-.env
 backend/.env
+.env
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Secrets / certs privés
+certs/*.key
+
+# Logs
 *.log
