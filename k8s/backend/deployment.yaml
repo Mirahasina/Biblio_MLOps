@@ -23,7 +23,7 @@ spec:
             - containerPort: 8000
           env:
             - name: DATABASE_URL
-              value: "postgresql://library:library@postgres-service:5432/library"
+              value: "postgresql://library:library@postgres:5432/library"
           livenessProbe:
             httpGet:
               path: /health

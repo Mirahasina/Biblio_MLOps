@@ -20,7 +20,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  psql -h postgres-service -U library -d library -c "
+                  psql -h postgres -U library -d library -c "
                     CREATE TABLE IF NOT EXISTS books_report (
                       id INTEGER PRIMARY KEY,
                       title VARCHAR(255),

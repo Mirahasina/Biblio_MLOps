@@ -21,13 +21,20 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: backend-service
+                name: backend
                 port:
                   number: 8000
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: frontend-service
+                name: frontend
                 port:
                   number: 80
+          - path: /airflow
+            pathType: Prefix
+            backend:
+              service:
+                name: airflow
+                port:
+                  number: 8080
