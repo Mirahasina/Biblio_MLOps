@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: ecommerce
+  namespace: librairy
   labels:
     app: postgres
 spec:

@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ecommerce-ingress
-  namespace: ecommerce
+  name: librairy-ingress
+  namespace: librairy
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - www.e-commerce.lcl
+        - www.librairy.lcl
       secretName: tls-secret
   rules:
-    - host: www.e-commerce.lcl
+    - host: www.librairy.lcl
       http:
         paths:
           - path: /api

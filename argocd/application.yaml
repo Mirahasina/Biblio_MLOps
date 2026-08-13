@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ecommerce-app
+  name: librairy-app
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/Mirahasina/ecommerce-gitops.git
+    repoURL: https://github.com/Mirahasina/Biblio_MLOps.git
     targetRevision: main
     path: k8s
   destination:
     server: https://kubernetes.default.svc
-    namespace: ecommerce
+    namespace: librairy
   syncPolicy:
     automated:
       prune: true

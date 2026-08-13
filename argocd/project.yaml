@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: ecommerce
+  name: librairy
   namespace: argocd
 spec:
-  description: E-Commerce DevSecOps Project
+  description: Librairy DevSecOps Project
   sourceRepos:
     - "*"
   destinations:
-    - namespace: ecommerce
+    - namespace: librairy
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: "*"

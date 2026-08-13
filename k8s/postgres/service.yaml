@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: ecommerce
+  namespace: librairy
 spec:
   selector:
     app: postgres

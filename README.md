@@ -1,6 +1,9 @@
-# E-Commerce - GitOps DevSecOps
+# Librairy - GitOps DevSecOps
 
-Projet examen DevOps/MLOps : application CRUD **livres** déployée via GitOps (GitHub → ArgoCD → Kubernetes) avec Ingress SSL, Nginx et pipeline ETL Airflow.
+Projet examen DevOps/MLOps : application CRUD **livres** (bibliothèque) déployée via GitOps (GitHub → ArgoCD → Kubernetes) avec Ingress SSL, Nginx et pipeline ETL Airflow.
+
+**Domaine :** `www.librairy.lcl`  
+**Devise :** Ariary (Ar)
 
 ## Architecture
 
@@ -8,19 +11,19 @@ Projet examen DevOps/MLOps : application CRUD **livres** déployée via GitOps (
 Machine (dev)
     │
     ▼
-Dossier projet ── CRUD Livres (React + FastAPI/Uvicorn)
+Dossier projet - CRUD Livres (React + FastAPI/Uvicorn + PostgreSQL)
     │
     ▼
-GitHub ── CI/CD (build, scan sécurité, push images)
+GitHub - CI/CD (build, scan sécurité, push images)
     │
     ▼
-ArgoCD ── GitOps (sync automatique des manifests K8S)
+ArgoCD - GitOps (sync automatique des manifests K8S)
     │
     ▼
-Kubernetes ── Deployments, Services, Ingress (SSL)
+Kubernetes - Deployments, Services, Ingress SSL (www.librairy.lcl)
     │
     ▼
-Job Airflow / CronJob ── ETL (extract → filter → load)
+Job Airflow / CronJob - ETL (extract → filter → load)
 ```
 
 ## Stack technique
@@ -29,13 +32,15 @@ Job Airflow / CronJob ── ETL (extract → filter → load)
 |-----------|-------------|
 | Frontend | React.js + Vite + Nginx |
 | Backend | Python FastAPI + Uvicorn |
-| Base de données | PostgreSQL 16 |
+| Base de données | PostgreSQL 16 (`library`) |
 | Orchestration | Kubernetes (K8S) |
+| Namespace K8S | `librairy` |
 | GitOps | ArgoCD |
 | Ingress | NGINX Ingress Controller + SSL (`file.crt`) |
-| Domaine local | `www.e-commerce.lcl` via `/etc/hosts` |
+| Domaine local | `www.librairy.lcl` via `/etc/hosts` |
 | CI/CD | GitHub Actions (DevSecOps + Trivy scan) |
 | ETL | Apache Airflow DAG + CronJob K8S |
+| Images Docker | `librairy-backend` / `librairy-frontend` |
 
 ## Structure du projet
 
@@ -48,6 +53,7 @@ projet_exam/
 │   │   ├── schemas.py
 │   │   ├── database.py
 │   │   └── routes/books.py
+│   ├── scripts/seed_books.py
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/             # Interface CRUD React.js
@@ -57,18 +63,18 @@ projet_exam/
 │   │   └── api/api.js
 │   ├── Dockerfile
 │   └── nginx.conf
-├── k8s/                  # Manifests Kubernetes
+├── k8s/                  # Manifests Kubernetes (namespace: librairy)
 │   ├── namespace.yaml
 │   ├── postgres/
 │   ├── backend/
 │   ├── frontend/
-│   ├── ingress/          # Ingress + TLS (file.crt)
+│   ├── ingress/          # Ingress + TLS pour www.librairy.lcl
 │   └── airflow/          # CronJob ETL
 ├── argocd/               # Configuration ArgoCD GitOps
 │   ├── application.yaml
 │   └── project.yaml
 ├── airflow/dags/         # DAG ETL (extract → filter → load)
-├── certs/                # Certificats SSL
+├── certs/                # Certificats SSL (CN=www.librairy.lcl)
 │   ├── generate-certs.sh
 │   ├── file.crt
 │   └── file.key
@@ -94,13 +100,19 @@ docker compose up --build
 - Backend API : http://localhost:8000
 - Swagger docs : http://localhost:8000/docs
 
-### 3. Dev sans Docker
+### 3. Charger des données de test
+
+```bash
+python3 backend/scripts/seed_books.py
+```
+
+### 4. Dev sans Docker
 
 ```bash
 # Backend
 cd backend
 pip install -r requirements.txt
-DATABASE_URL=postgresql://library:library@localhost:5432/library \
+DATABASE_URL=postgresql://library:library@localhost:5433/library \
   uvicorn app.main:app --reload --port 8000
 
 # Frontend
@@ -109,13 +121,14 @@ npm install
 npm run dev
 ```
 
+> En Docker Compose, PostgreSQL est exposé sur le port **5433** (host).
+
 ## Déploiement Kubernetes
 
 ### 1. Configurer le domaine local
 
 ```bash
-# Ajouter dans /etc/hosts
-echo "127.0.0.1  www.e-commerce.lcl" | sudo tee -a /etc/hosts
+echo "127.0.0.1  www.librairy.lcl" | sudo tee -a /etc/hosts
 ```
 
 ### 2. Générer le certificat SSL
@@ -137,7 +150,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl create secret tls tls-secret \
   --cert=certs/file.crt \
   --key=certs/file.key \
-  -n ecommerce
+  -n librairy
 ```
 
 ### 5. Déployer l'application
@@ -154,7 +167,7 @@ kubectl apply -f k8s/airflow/
 ### 6. Accéder à l'application
 
 ```
-https://www.e-commerce.lcl
+https://www.librairy.lcl
 ```
 
 ## GitOps avec ArgoCD
@@ -168,10 +181,11 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 
 ### 2. Appliquer l'Application ArgoCD
 
-Modifier `argocd/application.yaml` avec votre repo GitHub, puis :
+Vérifier `argocd/application.yaml` (repo GitHub + namespace `librairy`), puis :
 
 ```bash
 kubectl apply -f argocd/application.yaml
+kubectl apply -f argocd/project.yaml
 ```
 
 ArgoCD synchronise automatiquement les manifests K8S depuis GitHub.
@@ -181,7 +195,7 @@ ArgoCD synchronise automatiquement les manifests K8S depuis GitHub.
 Le pipeline `.github/workflows/ci-cd.yaml` exécute :
 
 1. **Scan sécurité** - Trivy (vulnérabilités CRITICAL/HIGH)
-2. **Build & Push** - Images Docker vers GHCR
+2. **Build & Push** - Images `librairy-backend` / `librairy-frontend` vers GHCR
 3. **GitOps sync** - ArgoCD détecte les changements et redéploie
 
 ## Pipeline ETL (Airflow)
@@ -189,7 +203,7 @@ Le pipeline `.github/workflows/ci-cd.yaml` exécute :
 Le DAG `airflow/dags/etl_filter_dag.py` :
 
 1. **Extract** - Lit tous les livres depuis PostgreSQL
-2. **Filter** - Garde uniquement les livres disponibles avec prix > 0
+2. **Filter** - Garde uniquement les livres disponibles avec prix > 0 (Ar)
 3. **Load** - Insère dans la table `books_report`
 
 Alternative K8S : CronJob `k8s/airflow/cronjob-etl.yaml` (exécution quotidienne à 2h).
@@ -213,9 +227,9 @@ Alternative K8S : CronJob `k8s/airflow/cronjob-etl.yaml` (exécution quotidienne
 | `author` | string | Auteur |
 | `isbn` | string | Numéro ISBN |
 | `genre` | string | Genre (roman, science, etc.) |
-| `price` | float | Prix en euros |
+| `price` | float | Prix en **Ariary (Ar)** |
 | `available` | boolean | Disponible en bibliothèque |
 
 ## Auteur
 
-Projet examen L3 INSI - DevOps / MLOps
+Projet examen L3 INSI - DevOps / MLOps - Librairy (`www.librairy.lcl`)

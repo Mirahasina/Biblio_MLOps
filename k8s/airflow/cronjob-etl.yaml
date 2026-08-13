@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: airflow-etl-trigger
-  namespace: ecommerce
+  namespace: librairy
 spec:
   schedule: "0 2 * * *"
   jobTemplate:
@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: etl-runner
-              image: ghcr.io/YOUR_GITHUB_USER/ecommerce-etl:latest
+              image: ghcr.io/YOUR_GITHUB_USER/librairy-etl:latest
               env:
                 - name: DATABASE_URL
                   value: "postgresql://library:library@postgres-service:5432/library"
