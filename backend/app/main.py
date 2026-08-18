@@ -33,6 +33,17 @@ app.add_middleware(
 app.include_router(books.router)
 
 
+@app.get("/api")
+@app.get("/api/")
+def api_root():
+    return {
+        "service": "Bibliothèque API",
+        "health": "/health",
+        "docs": "/docs",
+        "books": "/api/books/",
+    }
+
+
 @app.get("/health")
 def health_check():
     db_ok = check_db_connection()

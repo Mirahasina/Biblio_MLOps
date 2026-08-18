@@ -85,6 +85,8 @@ metadata:
     app: airflow
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: airflow
@@ -120,39 +122,54 @@ spec:
               value: postgresql+psycopg2://library:library@postgres:5432/library
             - name: DATABASE_URL
               value: postgresql://library:library@postgres:5432/library
+            - name: AIRFLOW__CORE__FERNET_KEY
+              value: "YlCPjdlydMy3hs9U4nCBy7sq9_Uc5m6uYs3eXxWn9y0="
           command:
             - bash
             - -c
             - |
+              mkdir -p /opt/airflow/dags
+              cp -L /config/dags/*.py /opt/airflow/dags/ 2>/dev/null || true
               pip install --no-cache-dir psycopg2-binary==2.9.9 -q
               airflow db migrate
               airflow users create \
-                --username admin --password admin \
-                --firstname Lib --lastname Rairy \
-                --role Admin --email admin@librairy.lcl || true
-              airflow webserver --port 8080 &
-              exec airflow scheduler
+                --username admin \
+                --password admin \
+                --firstname Admin \
+                --lastname User \
+                --role Admin \
+                --email admin@librairy.lcl || \
+              airflow users reset-password \
+                --username admin \
+                --password admin
+              exec airflow standalone
           volumeMounts:
-            - name: dags
+            - name: dags-cm
+              mountPath: /config/dags
+              readOnly: true
+            - name: dags-runtime
               mountPath: /opt/airflow/dags
           resources:
             requests:
               memory: "512Mi"
               cpu: "200m"
             limits:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: "1536Mi"
+              cpu: "1000m"
           readinessProbe:
             httpGet:
-              path: /health
+              path: /airflow/health
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
-            failureThreshold: 20
+            timeoutSeconds: 5
+            failureThreshold: 30
       volumes:
-        - name: dags
+        - name: dags-cm
           configMap:
             name: airflow-dags
+        - name: dags-runtime
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -166,3 +183,4 @@ spec:
     - port: 8080
       targetPort: 8080
   type: ClusterIP
+  publishNotReadyAddresses: true

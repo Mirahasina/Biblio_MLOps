@@ -7,6 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
 spec:
   ingressClassName: nginx
   tls:
@@ -17,6 +18,7 @@ spec:
     - host: www.librairy.lcl
       http:
         paths:
+          # Ordre important : chemins spécifiques AVANT /
           - path: /api
             pathType: Prefix
             backend:
@@ -24,13 +26,27 @@ spec:
                 name: backend
                 port:
                   number: 8000
-          - path: /
+          - path: /docs
             pathType: Prefix
             backend:
               service:
-                name: frontend
+                name: backend
                 port:
-                  number: 80
+                  number: 8000
+          - path: /openapi.json
+            pathType: Exact
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /redoc
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
           - path: /airflow
             pathType: Prefix
             backend:
@@ -38,3 +54,10 @@ spec:
                 name: airflow
                 port:
                   number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
